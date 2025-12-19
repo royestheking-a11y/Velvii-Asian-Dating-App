@@ -105,6 +105,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
     const otherUserIdRef = useRef<string>('');
     const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+    const startActualCallRef = useRef<(id: string) => void>(() => { });
 
     // Update ref when state changes
     useEffect(() => {
@@ -175,11 +176,13 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
             newSocket.on('voice-permission-granted', ({ from }) => {
                 console.log(`[CallDebug] Permission GRANTED by: ${from}`);
-                // Debug Toast to see if we get a Socket ID or User ID
-                toast.success(`Permission Granted by: ${from}`);
+                toast.success(`Permission Granted! Connecting...`, { icon: '📞' });
 
                 // Ensure ID is stored as string
                 localStorage.setItem(`voice_perm_${String(from)}`, 'true');
+
+                // AUTO-START CALL
+                startActualCallRef.current(from);
             });
 
             newSocket.on('voice-permission-denied', () => {
@@ -364,6 +367,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             console.log("[CallDebug] Permission missing. Sending request.");
+            setCallStatus('requesting'); // Show "Requesting permission..." UI
             // NEW FLOW: Send Request Message
             const msg: Partial<Message> = {
                 id: generateId(),
@@ -433,6 +437,11 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         connectionRef.current = peer;
     };
+
+    // Keep Ref updated
+    useEffect(() => {
+        startActualCallRef.current = startActualCall;
+    });
 
     // 2. Answer Call
     const answerCall = async () => {
