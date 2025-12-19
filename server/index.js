@@ -234,15 +234,19 @@ io.on("connection", (socket) => {
     // --- Call Signaling Events ---
 
     // 1. Caller initiates call (Only after permission if enforced on client)
+    // 1. Caller initiates call (Only after permission if enforced on client)
     socket.on("call-user", (data) => {
         const { userToCall, signalData, from, name } = data;
         const user = activeUsers.find((u) => u.userId === userToCall);
 
-        console.log(`Call from ${from} to ${userToCall}`);
+        console.log(`[SERVER] Call from ${from} to ${userToCall}`);
+        console.log(`[SERVER] Target User ${userToCall} Socket ID: ${user ? user.socketId : 'NOT FOUND'}`);
 
         if (user) {
             io.to(user.socketId).emit("call-made", { signal: signalData, from, name });
+            console.log(`[SERVER] Sent 'call-made' to ${user.socketId}`);
         } else {
+            console.log("[SERVER] User offline, call failed.");
             // User offline
             // Maybe emit "user-offline"
         }
