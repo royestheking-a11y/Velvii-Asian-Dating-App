@@ -409,6 +409,12 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     // 1. Start Actual Call (Outgoing)
     const startActualCall = async (userId: string) => {
+        // CLEANUP: Ensure previous call mess is gone
+        if (connectionRef.current) {
+            connectionRef.current.destroy();
+            connectionRef.current = null;
+        }
+
         setCallStatus('outgoing');
         playRingtone('outgoing'); // Play Ringback
 
@@ -433,6 +439,15 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         peer.on('stream', (userStream) => {
             playRemoteAudio(userStream);
+        });
+
+        peer.on('close', () => {
+            leaveCall();
+        });
+
+        peer.on('error', (err) => {
+            console.error("Peer Error:", err);
+            leaveCall();
         });
 
         connectionRef.current = peer;
