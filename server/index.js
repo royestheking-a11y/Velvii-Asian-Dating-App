@@ -44,6 +44,12 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
+
+// Root Route
+app.get('/', (req, res) => {
+    res.json({ message: "Velvii Application API is running successfully!" });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
