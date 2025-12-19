@@ -155,10 +155,22 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             newSocket.emit('add-user', currentUser.id);
 
             // --- PERMISSION EVENTS ---
-            newSocket.on('voice-permission-requested', ({ from, name }) => {
+            newSocket.on('voice-permission-requested', ({ from, name, image }) => {
                 console.log("Voice permission requested from:", name);
-                toast.info(`${name} requested voice call permission`, { icon: '📞' });
-                // We do NOT play sound here, as it's just a permission request message.
+
+                // CRITICAL FIX: Set state so CallModal "Permission Request" UI appears!
+                setCallStatus('incoming_request');
+                setCallerName(name);
+                setCallerImage(image || 'https://via.placeholder.com/150'); // Fallback image
+                setOtherUserId(from);
+
+                // Play notification sound
+                try {
+                    const audio = new Audio('/notification_sound.mp3');
+                    audio.play().catch(e => console.log("Audio play failed", e));
+                } catch (err) {
+                    console.log("Audio error", err);
+                }
             });
 
             newSocket.on('voice-permission-granted', ({ from }) => {
